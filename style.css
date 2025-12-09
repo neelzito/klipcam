@@ -292,6 +292,25 @@ a:hover {
     color: var(--text-secondary);
 }
 
+/* Support Section */
+#support {
+    text-align: center;
+}
+
+#support h3 {
+    margin-bottom: 20px;
+    font-size: 2.2em;
+    background: linear-gradient(to right, var(--primary-500), var(--secondary-500));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+#support p {
+    max-width: 600px;
+    margin: 0 auto 30px;
+    font-size: 1.1em;
+}
+
 /* Legal Section */
 .legal-links {
     text-align: center;
