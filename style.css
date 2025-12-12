@@ -162,18 +162,28 @@ a:hover {
     display: inline-block;
     transition: transform 0.3s ease, filter 0.3s ease;
     margin-top: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Add border for visibility on dark bg */
+    border-radius: 10px;
+    /* Match SVG corner rounding roughly */
+    overflow: hidden;
+    line-height: 0;
+    /* Remove extra vertical space */
 }
 
 .app-store-btn img {
-    height: 60px;
-    /* Standard height for App Store badges */
+    height: 40px;
+    /* Fixed height matching SVG */
     width: auto;
+    min-width: 120px;
+    /* Ensure it doesn't collapse */
     display: block;
 }
 
 .app-store-btn:hover {
     transform: translateY(-3px) scale(1.02);
     filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+    border-color: rgba(255, 255, 255, 0.8);
 }
 
 /* Feature Icons */
@@ -402,37 +412,89 @@ footer {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+/* Desktop Layout */
+@media (min-width: 960px) {
+    .container {
+        max-width: 1200px;
+        padding: 0 40px;
+    }
+
     .hero-section {
-        padding: 60px 20px 30px;
+        text-align: left;
+        padding: 100px 0;
+    }
+
+    .hero-section .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 60px;
+    }
+
+    .hero-content {
+        flex: 1;
+        max-width: 600px;
+        /* Limit text width */
+    }
+
+    .hero-section h1 {
+        font-size: 4em;
+    }
+
+    .hero-section p {
+        margin-left: 0;
+        /* Reset center-aligned margin auto */
+    }
+
+    .cta-buttons {
+        margin-bottom: 0;
+        /* Align with content */
+    }
+
+    .hero-section .app-icon {
+        margin-left: 0;
+        /* Left align icon */
+    }
+
+    .app-showcase {
+        flex: 1;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0;
+        gap: 20px;
+    }
+
+    .app-showcase img {
+        max-width: 280px;
+        /* Slightly smaller to fit side-by-side */
+    }
+}
+
+/* Tablet & Mobile Layout */
+@media (max-width: 959px) {
+    .hero-section {
+        padding: 60px 20px 40px;
     }
 
     .hero-section h1 {
         font-size: 2.5em;
-    }
-
-    .hero-section h2 {
-        font-size: 1.5em;
+        /* Adjusted for tablet */
     }
 
     .app-showcase {
         flex-direction: column;
         align-items: center;
-        gap: 20px;
+        margin-top: 50px;
     }
 
     .app-showcase img {
-        max-width: 250px;
+        max-width: 80%;
+        /* responsive width */
     }
 
     .feature-grid,
     .steps {
-        grid-template-columns: 1fr;
-    }
-
-    .legal-document {
-        padding: 20px;
-        margin: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
 }
 
