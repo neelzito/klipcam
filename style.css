@@ -623,6 +623,14 @@ footer {
     font-weight: 800;
 }
 
+.gallery-description {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 600px;
+    margin-top: 0.5rem;
+    line-height: 1.5;
+}
+
 .close-btn {
     background: none;
     border: none;

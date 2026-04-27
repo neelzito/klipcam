@@ -207,7 +207,10 @@
         <div class="modal-overlay" onclick="closeGallery()"></div>
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="gallery-title">Collection Gallery</h3>
+                <div class="header-info">
+                    <h3 id="gallery-title">Collection Gallery</h3>
+                    <p id="gallery-description" class="gallery-description"></p>
+                </div>
                 <button class="close-btn" onclick="closeGallery()">&times;</button>
             </div>
             <div id="gallery-grid" class="gallery-grid">
@@ -420,6 +423,19 @@
         const lightboxImg = document.getElementById('lightbox-img');
         const galleryGrid = document.getElementById('gallery-grid');
         const galleryTitle = document.getElementById('gallery-title');
+        const galleryDesc = document.getElementById('gallery-description');
+
+        const packDescriptions = {
+            "urban-and-iconic": "Experience the grandeur of Singapore's modern skyline. From the sunset at Marina Bay Sands to the futuristic architecture of the Helix Bridge, these results capture the perfect cinematic glow.",
+            "heritage-and-culture": "Vibrant, timeless, and uniquely Singaporean. These portraits celebrate the colorful shophouses of Joo Chiat and the historic charm of Chinatown.",
+            "nature-and-scenic": "Find serenity in the lush greenery of the Botanic Gardens and the hidden trails of MacRitchie. Perfect for couples who love the soft, natural light of the outdoors.",
+            "historical-singapore": "A nostalgic journey back to the 1960s. Recreate the era of your parents' youth with vintage kopitiams and the iconic landmarks of old Singapore.",
+            "rustic-and-hidden": "Step off the beaten path into the wild lalang fields of Seletar and the untouched beauty of Pulau Ubin. Raw, authentic, and breathtakingly scenic.",
+            "bali": "Golden hour on the Uluwatu cliffs and the emerald rice terraces of Ubud. Get the destination wedding look without the long-haul flight.",
+            "japan": "Timeless romance under the Kyoto cherry blossoms. These results capture the delicate beauty of the Sakura season and the quiet dignity of ancient temples.",
+            "new-zealand": "Majestic peaks, lupin fields, and crystal-clear lakes. Experience the vast, epic scale of the Southern Alps in every frame.",
+            "taiwan": "Wander through the lantern-lit streets of Jiufen and the misty forests of Alishan. A collection that feels like a scene from a romantic movie."
+        };
 
         document.querySelectorAll('.pack-card').forEach(card => {
             card.addEventListener('click', () => {
@@ -431,6 +447,7 @@
 
         function openGallery(packId, title) {
             galleryTitle.innerText = title;
+            galleryDesc.innerText = packDescriptions[packId] || "";
             galleryGrid.innerHTML = '';
             
             const images = imageMap[packId] || [];
