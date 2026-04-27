@@ -20,12 +20,6 @@
     <meta property="og:locale" content="en_SG">
     <meta property="og:site_name" content="KlipCam Studio">
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="KlipCam Studio – AI Pre-Wedding Photos Singapore">
-    <meta name="twitter:description" content="Professional pre-wedding photos at MBS, Joo Chiat & Bali. Powered by AI. Free on iPhone.">
-    <meta name="twitter:image" content="https://www.klipcam.com/masterpiece-hero.png">
-
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -140,62 +134,96 @@
     <section id="collections" class="section" style="background: rgba(99,102,241,0.02);" aria-labelledby="collections-heading">
         <div class="container">
             <div class="section-header">
-                <h2 id="collections-heading">10 Exclusive AI Collections</h2>
-                <p>Each collection is crafted with real Singapore and international landmark references for stunning, authentic results.</p>
+                <h2 id="collections-heading">AI Collections</h2>
+                <p>Click on any collection to view the full gallery of generated sample images.</p>
             </div>
             
             <h3 class="collection-group-label">🇸🇬 Singapore Collections</h3>
             <div class="pack-grid">
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="urban-and-iconic">
                     <img src="samples/urban-and-iconic-singapore.jpg" alt="AI pre-wedding photo at Marina Bay Sands Singapore" loading="lazy" width="400" height="400">
                     <h4>Urban & Iconic</h4>
                     <p>MBS, Gardens by the Bay, Jewel Changi, and the Helix Bridge.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="heritage-and-culture">
                     <img src="samples/heritage-and-culture-singapore.jpg" alt="AI heritage portrait at Joo Chiat Singapore shophouses" loading="lazy" width="400" height="400">
                     <h4>Heritage & Culture</h4>
                     <p>Joo Chiat, Chinatown, Kampong Glam, and Little India.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="nature-and-scenic">
                     <img src="samples/nature-and-scenic-singapore.jpg" alt="AI couple portrait at Singapore Botanic Gardens" loading="lazy" width="400" height="400">
                     <h4>Nature & Scenic</h4>
                     <p>Botanic Gardens, MacRitchie, Fort Canning, and East Coast.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="historical-singapore">
                     <img src="samples/historical-singapore.jpg" alt="Vintage AI portrait in 1960s historical Singapore" loading="lazy" width="400" height="400">
                     <h4>Historical Singapore</h4>
-                    <p>Recreate the Singapore your parents grew up in — 1960s kopitiam, Gay World, and the old National Theatre.</p>
+                    <p>Recreate the Singapore your parents grew up in — 1960s kopitiam and nostalgia.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="rustic-and-hidden">
                     <img src="samples/rustic-and-hidden-singapore.jpg" alt="AI pre-wedding photo at Seletar Reservoir rustic Singapore" loading="lazy" width="400" height="400">
                     <h4>Rustic & Hidden</h4>
                     <p>Seletar tree, Lalang fields, Pulau Ubin, and hidden trails.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
             </div>
 
             <h3 class="collection-group-label" style="margin-top: 3.5rem;">✈️ Travel Collections</h3>
             <div class="pack-grid">
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="bali">
                     <img src="samples/bali-tropical-escape.jpg" alt="AI pre-wedding photo in Bali jungle and Uluwatu cliff" loading="lazy" width="400" height="400">
                     <h4>Bali Tropical Escape</h4>
-                    <p>Uluwatu cliffs, Ubud jungles, rice terraces, and Tanah Lot temple sunsets.</p>
+                    <p>Uluwatu cliffs, Ubud jungles, rice terraces, and Tanah Lot sunsets.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="japan">
                     <img src="samples/japan-seasons-and-heritage.jpg" alt="AI pre-wedding photo under cherry blossoms in Kyoto Japan" loading="lazy" width="400" height="400">
                     <h4>Japan Seasons & Heritage</h4>
-                    <p>Kyoto sakura, Fushimi Inari torii gates, bamboo groves, and Tokyo nights.</p>
+                    <p>Kyoto sakura, Fushimi Inari torii gates, and bamboo groves.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="new-zealand">
                     <img src="samples/new-zealand-epic-landscapes.jpg" alt="AI couple photo at Lake Tekapo New Zealand lupin fields" loading="lazy" width="400" height="400">
                     <h4>New Zealand Epic</h4>
                     <p>Lake Tekapo lupins, Milford Sound, Roy's Peak, and the Wanaka Tree.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
-                <div class="pack-card">
+                <div class="pack-card" data-pack-id="taiwan">
                     <img src="samples/taiwan-scenic-romance.jpg" alt="AI pre-wedding photo in Jiufen Taiwan lantern street" loading="lazy" width="400" height="400">
                     <h4>Taiwan Scenic Romance</h4>
-                    <p>Jiufen's lantern-lit alleyways, Sun Moon Lake, and Alishan Forest Railway.</p>
+                    <p>Jiufen's lantern-lit alleyways, Sun Moon Lake, and Alishan Forest.</p>
+                    <div class="card-overlay">View Gallery</div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- ─── GALLERY MODAL ─────────────────────────────────── -->
+    <div id="gallery-modal" class="modal">
+        <div class="modal-overlay" onclick="closeGallery()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="gallery-title">Collection Gallery</h3>
+                <button class="close-btn" onclick="closeGallery()">&times;</button>
+            </div>
+            <div id="gallery-grid" class="gallery-grid">
+                <!-- Images populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MID-PAGE CTA ──────────────────────────────────── -->
+    <section class="mid-cta" aria-label="Download call to action">
+        <div class="container" style="text-align:center;">
+            <h2>Ready to explore your story?</h2>
+            <p>Download free on iPhone and generate your first collection in minutes.</p>
+            <a href="https://apps.apple.com/app/klipcam-studio" class="app-store-btn" id="mid-cta" aria-label="Download KlipCam Studio on the App Store">
+                <img src="app-store-badge.svg" alt="Download on the App Store" width="160" height="53">
+            </a>
         </div>
     </section>
 
@@ -215,12 +243,12 @@
                 <div class="step">
                     <div class="step-num">02</div>
                     <h3>Choose Your Collection</h3>
-                    <p>Browse 10 curated collections. Tap the one that speaks to you — whether it's Marina Bay at golden hour or cherry blossoms in Kyoto — and hit Generate.</p>
+                    <p>Browse curated collections. Tap the one that speaks to you — whether it's Marina Bay or Kyoto — and hit Generate.</p>
                 </div>
                 <div class="step">
                     <div class="step-num">03</div>
                     <h3>Receive 15 Professional Photos</h3>
-                    <p>Close the app and carry on with your day. KlipCam runs in the background and sends you a notification the moment your 15-photo collection is ready at 4K resolution.</p>
+                    <p>Close the app and carry on with your day. KlipCam runs in the background and notifies you the moment your 15-photo collection is ready.</p>
                 </div>
             </div>
         </div>
@@ -274,7 +302,7 @@
             </details>
             <details class="faq-item">
                 <summary>Can I generate photos for my parents as a gift?</summary>
-                <p>Absolutely. The Historical Singapore collection lets you recreate vintage Singapore scenes — kopitiams, old National Theatre, Gay World Amusement Park — as a meaningful gift for parents who grew up in that era. It's one of the most emotionally resonant things you can do with KlipCam Studio.</p>
+                <p>Absolutely. The Historical Singapore collection lets you recreate vintage Singapore scenes — kopitiams, old National Theatre, Gay World Amusement Park — as a meaningful gift for parents who grew up in that era.</p>
             </details>
             <details class="faq-item">
                 <summary>Do I need a professional camera or studio?</summary>
@@ -296,7 +324,7 @@
         <div class="container">
             <div class="cta-block">
                 <h2>Start Your Wedding Story Today</h2>
-                <p style="color: var(--muted); margin-bottom: 0.5rem; font-size: 1.1rem; max-width: 500px; margin-left: auto; margin-right: auto;">Join couples across Singapore who are creating the photos they've always imagined — from MBS sunsets to 1960s heritage streets — all from their iPhone.</p>
+                <p style="color: var(--muted); margin-bottom: 0.5rem; font-size: 1.1rem; max-width: 500px; margin-left: auto; margin-right: auto;">Join couples across Singapore who are creating the photos they've always imagined — all from their iPhone.</p>
                 <div style="margin-top: 2.5rem;">
                     <a href="https://apps.apple.com/app/klipcam-studio" class="app-store-btn" id="footer-cta" aria-label="Download KlipCam Studio on the App Store">
                         <img src="app-store-badge.svg" alt="Download on the App Store" width="160" height="53">
@@ -346,6 +374,82 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        const imageMap = {
+            "urban-and-iconic": [
+                "1q8zawbpn9rmw0cxncbvkv5gvc.jpeg", "2zvf9d8xrhrmt0cxncbsv4f69w.jpeg", "43m320dwvxrmw0cxncatkhw05r.jpeg", "67ybh2spbdrmw0cxncdam7a3jw.jpeg", "c6t22z62bnrmy0cxncbama7nag.jpeg", "dhkcwmvn3xrmw0cxncc8mex4tm.jpeg", "e1h9my9c05rmy0cxncc97a7hnc.jpeg", "gpprgq6gysrmw0cxncbvr7zeh8.jpeg", "hero.jpeg", "jzc5phewaxrmr0cxnccrgskx94.jpeg", "q2r19899kxrmw0cxnccsy4krrm.jpeg", "q78z10b1cnrmy0cxncaswq3yzc.jpeg", "smkeenk6xnrmt0cxncbbp4v51g.jpeg", "ttt99mf2z9rmy0cxnccbbv1y04.jpeg", "yn8qbmc2vdrmr0cxnccrgewx4g.jpeg", "z967qy09g9rmw0cxncb92bbz9g.jpeg"
+            ],
+            "heritage-and-culture": [
+                "3pk31tgjn9rmy0cxnwdvqhy678.jpeg", "79ckp6nxe5rmw0cxnw9rmhvzkc.jpeg", "7jzhrp8q09rmr0cxnwabm18ngw.jpeg", "8j0s2vahk5rmw0cxnw98hb03j0.jpeg", "9kpvj7c4x5rmt0cxnw8sza3x3m.jpeg", "9rcmm199s9rmr0cxnw8vw5x8a8.jpeg", "e17hemfxsxrmw0cxnw7s6jagn0.jpeg", "e9gxnp5b4nrmy0cxnw98hdw0d8.jpeg", "f4gny5cvahrmr0cxnw7vgy0n7c.jpeg", "ha5kkwbh11rmy0cxnwa8esm6nw.jpeg", "je80mx7nh9rmt0cxnw8vh86c4r.jpeg", "kxrkp4ydtxrmw0cxnwaaep17yc.jpeg", "kyr2cq32f1rmw0cxnw9r1yqwv8.jpeg", "m2gmcepdknrmw0cxnw8byn4t1w.jpeg", "v9btw5awydrmt0cxnw8ag8w7a4.jpeg", "zfbht206h5rmw0cxnw9spgphd4.jpeg"
+            ],
+            "nature-and-scenic": [
+                "4bmmx05dc5rmt0cxnwbscs8qkr.jpeg", "afxh77nm7drmy0cxnwc99gtb50.jpeg", "bh8bhp66f1rmt0cxnwdsmzkxq8.jpeg", "cqyzszdyn5rmr0cxnwbv1mpj10.jpeg", "cvszf0anwsrmw0cxnwcbhq2ws0.jpeg", "cxnv4g1t0hrmr0cxnwbswjw54c.jpeg", "dy7zskcktsrmw0cxnwbrg5ekk0.jpeg", "f2wb21qgq5rmw0cxnwct3cpw00.jpeg", "gnb2w19wp5rmt0cxnwetjapyc4.jpeg", "h3sq8a4289rmw0cxnwcthrn4h4.jpeg", "hedbvfwrg9rmr0cxnwbsjtstkg.jpeg", "jfggzh7vj5rmr0cxnwbt5r8gar.jpeg", "kgxtqfc199rmt0cxnwebrh3v64.jpeg", "kkd2gemr6xrmr0cxnwbsek3ss8.jpeg", "mn101ed5rdrmt0cxnwbte8x664.jpeg", "ncjy15cgenrmy0cxnwbtehqkjm.jpeg", "q49qcqf1chrmw0cxnweb5ffm9c.jpeg", "qcx098dprxrmt0cxnwbrjt3gnm.jpeg", "s21891x5d1rmw0cxnwbvv7pt0m.jpeg", "s9k5ycyxa9rmt0cxnwb8ekdnbc.jpeg", "t5bbffh2thrmr0cxnweb57y1zr.jpeg", "tk1n7wcfq1rmw0cxnwbscj2e1g.jpeg", "w3fkgq3vfhrmw0cxnwbt23a4sc.jpeg", "wr9g0jy0x1rmy0cxnwbtf9gkgc.jpeg", "wrdjjmx1psrmy0cxnwbr13evcm.jpeg", "ynz89ktz91rmw0cxnwd8v3cbn4.jpeg", "yqz99ec5hhrmt0cxnwbsda53vm.jpeg", "ysy6v3msfhrmr0cxnwbsbsmmaw.jpeg", "zx2yvkdrn5rmr0cxnwdbw46hk8.jpeg"
+            ],
+            "historical-singapore": [
+                "0mjvx9kk0nrmr0cxnwhbtp236r.jpeg", "12g4xge1d1rmy0cxnwbs3kaqzg.jpeg", "1ww32a8qh1rmy0cxnwh89ne88r.jpeg", "32ngsfah55rmw0cxnwk97th6c4.jpeg", "45z6cj17x9rmt0cxnwctvsxsg0.jpeg", "46a0drdrw5rmw0cxnwbtajhe34.jpeg", "6mt8madckxrmw0cxnwhv3mwrkm.jpeg", "7116kq9emsrmt0cxnwjrvgq7w0.jpeg", "aaegqscg2srmw0cxnwbs4qwj18.jpeg", "fmj91t8899rmt0cxnwjaw21fdm.jpeg", "ga7eyz3229rmw0cxnwjbz2b0nw.jpeg", "k7a5fqy0v9rmr0cxnwja722gpc.jpeg", "mqr2vsktgxrmy0cxnwkrfr7cdr.jpeg", "nmheydfpbsrmr0cxnwjvfjj5rr.jpeg", "sbtbkn0ardrmy0cxnwkrbgr0kc.jpeg", "v638m5c8d1rmr0cxnwjv1je0a0.jpeg", "x7xjyeq51drmw0cxnwh89ne88r.jpeg"
+            ],
+            "rustic-and-hidden": [
+                "8a87vtg49nrmy0cxnwqs60qp30.jpeg", "c2c1p0rghxrmt0cxnwpvkdzrf4.jpeg", "cyzpptpwp5rmw0cxnwmsd8fmn0.jpeg", "ev38pg5nc1rmy0cxnwp83v3abc.jpeg", "j6wwv6ac35rmr0cxnwqbma4cz8.jpeg", "prq1mqhrwhrmt0cxnwna45apec.jpeg", "q1jjnkmbdnrmr0cxnwnvy9rxm0.jpeg", "qxwvtdn9bsrmr0cxnwqbq6wmrm.jpeg", "r6qx8szfc1rmw0cxnwpsszn5kr.jpeg", "rk62we5caxrmw0cxnwn8csph8w.jpeg", "s2ffbwrvr1rmy0cxnwnrj9acmc.jpeg", "tevma0b889rmy0cxnwmtpgaxt4.jpeg", "tzctbmbxtnrmr0cxnwprcs9r34.jpeg", "y875sp76g1rmr0cxnwns41sadr.jpeg", "zwffve24wxrmr0cxnwpaqjz7z0.jpeg"
+            ],
+            "bali": [
+                "image00001.jpeg", "image00002.jpeg", "image00003.jpeg", "image00004.jpeg", "image00005.jpeg", "image00006.jpeg", "image00007.jpeg", "image00008.jpeg", "image00009.jpeg", "image00010.jpeg", "image00011.jpeg", "image00012.jpeg", "image00013.jpeg", "image00014.jpeg", "image00015.jpeg"
+            ],
+            "japan": [
+                "0rtnjcj1r5rmy0cxp00rmsqger.jpeg", "19q4gqpk9nrmw0cxp029cjcjmc.jpeg", "1atnpnwq8hrmr0cxp01r07w7f0.jpeg", "4zseat5k7xrmw0cxp00sgqathc.jpeg", "8acrhtx4ssrmt0cxnzzvs5ppzc.jpeg", "bw42tg1389rmw0cxp01snx92bg.jpeg", "dy0308q5c1rmy0cxp00ajmjcvm.jpeg", "gxvxgvr781rmw0cxp02930155g.jpeg", "jxega6v279rmw0cxp02azq922m.jpeg", "mtt50sp6vnrmt0cxp018vw522c.jpeg", "n97xkggfrhrmy0cxp01bahp17m.jpeg", "t6tn7f0st5rmy0cxp008p408pc.jpeg", "te0xnvkd3nrmw0cxp01byb5fzc.jpeg", "vx01h6sjzdrmr0cxp02v8wa87r.jpeg", "ynh3cp3ptdrmt0cxp009gqc0y0.jpeg"
+            ],
+            "new-zealand": [
+                "2gxqpenb0hrmr0cxp0wt7pwxy8.jpeg", "8cgns5vbjxrmt0cxp0nr8ya8d0.jpeg", "cnf1ddp62xrmt0cxp0w98hener.jpeg", "cwd7jkparsrmw0cxp0ntnyde7m.jpeg", "dgfr22jczdrmw0cxp0wr84e8qc.jpeg", "jw26knrk3drmw0cxp0vr67qf2m.jpeg", "k2j061nnnnrmr0cxp0v9r7j3bc.jpeg", "nrmgkrnhpdrmr0cxp0nb3yhcc4.jpeg", "snhxp7jk29rmr0cxp0n9aavbm4.jpeg", "twvfnxkd7nrmr0cxp0rtc4p80c.jpeg", "wz2smv22m5rmt0cxp0wasspv58.jpeg", "y9aagy0echrmy0cxp0ntfejtsw.jpeg", "yqmte3q9hhrmw0cxp0vte06fq4.jpeg", "z9wmxakm6xrmw0cxp0vsq983tg.jpeg", "zdadzj0fznrmw0cxp0rswhk9sr.jpeg"
+            ],
+            "taiwan": [
+                "0b5tamx6xxrmt0cxnzs91r71dr.jpeg", "51fg5ntbtdrmt0cxnzs8sz91pm.jpeg", "69vw558tc1rmt0cxnzvtp4xdh0.jpeg", "7fvbbf74ynrmr0cxnztb1kj5nr.jpeg", "f6x82r9c09rmr0cxnzt9cxh7h0.jpeg", "g4v7x0vnhhrmt0cxnzvvxn1x40.jpeg", "j5y4bsr3j1rmy0cxnzsr2yesng.jpeg", "mc04tn9zq1rmy0cxnzts9tz064.jpeg", "nzhkab5tz1rmt0cxnzsvcs3y40.jpeg", "p08d21jzydrmw0cxnzsr19679m.jpeg", "q6qjg4c9s9rmy0cxnzt95nabc4.jpeg", "s2p1117mf5rmr0cxnzttwjkacw.jpeg", "wsk9rmjhe5rmr0cxnzv91cwjp8.jpeg", "y6csqh4tasrmr0cxnztvsa8aqr.jpeg", "y9g7xqxzz1rmt0cxnzv8996zcc.jpeg"
+            ]
+        };
+
+        const modal = document.getElementById('gallery-modal');
+        const galleryGrid = document.getElementById('gallery-grid');
+        const galleryTitle = document.getElementById('gallery-title');
+
+        document.querySelectorAll('.pack-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const packId = card.getAttribute('data-pack-id');
+                const title = card.querySelector('h4').innerText;
+                openGallery(packId, title);
+            });
+        });
+
+        function openGallery(packId, title) {
+            galleryTitle.innerText = title;
+            galleryGrid.innerHTML = '';
+            
+            const images = imageMap[packId] || [];
+            images.forEach(imgName => {
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'gallery-item';
+                
+                const img = document.createElement('img');
+                img.src = `samples/${packId}/${imgName}`;
+                img.alt = `${title} sample image`;
+                img.loading = 'lazy';
+                
+                imgContainer.appendChild(img);
+                galleryGrid.appendChild(imgContainer);
+            });
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scroll
+        }
+
+        function closeGallery() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeGallery();
+        });
+    </script>
 
 </body>
 </html>
