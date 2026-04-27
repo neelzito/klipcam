@@ -1,0 +1,112 @@
+KlipCam Cursor Rules
+
+Context
+- Product: Creator AI to make IG-ready images/videos fast. Core: "Create 10 IG-ready images in under 5 minutes from 10 selfies."
+- Stack: Next.js (App Router), TypeScript, Tailwind CSS, Clerk auth, Supabase (Postgres + Storage), Stripe, Replicate. Hosting: Vercel.
+- Reference docs: styleguide.md (design system), MVP.md (product & API), CLAUDE.md (overview). Always align with these.
+
+Golden rules
+- Favor clarity, safety, and mobile-first UX. Implement minimal, reliable solutions that respect credits, queue, and storage constraints.
+- Server-only for secrets (Stripe, Supabase service role, Replicate). Never expose secrets to client.
+- Keep flows simple: preset-first, minimal inputs, clear credit costs, robust failure/refund behavior.
+- Accessibility: mobile touch targets ≥44px, focus states, WCAG AA contrast, semantic HTML.
+
+Project conventions
+- Language: TypeScript strict. Avoid any unless absolutely necessary with justification.
+- Next.js App Router:
+  - Use React Server Components by default. Add "use client" only for interactive pieces.
+  - API route handlers under app/api/**/route.ts (no pages/api).
+  - Use Edge runtime only when all deps support it; otherwise default Node for Stripe/Webhooks.
+- Styling: Tailwind CSS per styleguide.md. Prefer CSS variables for theme tokens. Dark theme default.
+- Components: PascalCase filenames, colocate small components near usage; shared primitives in src/components.
+- Naming: Descriptive, full words. Functions are verbs; variables are nouns. Avoid abbreviations.
+- Control flow: Early returns, handle errors first, avoid deep nesting; extract helpers for complex logic.
+- Comments: Explain “why”, not “how”. Avoid TODOs—implement or open an issue.
+
+Domain rules (must follow)
+- Credits (from MVP.md): base image 1, premium image 4, upscale 4, base video 18, spider effect 25. Subscription: 900/month. Trial: 10 free (watermarked, no upscale).
+- Job lifecycle: pre-check and reserve credits → create job → call Replicate → webhook finalizes → success: store assets, finalize charge → failure: refund credits.
+- Concurrency: max 2 running jobs per user in v1. Additional jobs are queued in-app.
+- Safety & policy: disallow NSFW and celebrity likeness; rely on model safety filters. Provide friendly error messages; refund on policy blocks.
+- Storage: Supabase Storage bucket generated/ with per-user prefix. Trial watermarking; paid no watermark. Respect tier-based retention in UI copy.
+
+API guidelines
+- Authentication: use Clerk. In server contexts, import from @clerk/nextjs/server. All API endpoints require auth (except public webhooks).
+- Route handlers patterns (Node runtime):
+  - POST /api/jobs: validate input, estimate cost, ensure balance ≥ estimate, reserve credits, create jobs row, call Replicate, return job id.
+  - POST /api/replicate/webhook: verify signature if configured, update job, store assets, ledger finalize or refund.
+  - POST /api/assets/:id/upscale: validate credits, run ESRGAN, store result, ledger charge.
+  - POST /api/stripe/webhook: verify signature; manage subscription + credits per MVP.
+- Data access:
+  - Use server-side Supabase client with service role only in route handlers/server actions; never in client components.
+  - Encapsulate credit reservation/finalization in helpers to avoid duplication.
+- Errors & refunds: Always refund on job failures or policy blocks. Provide specific messages. Log with context.
+
+UI/UX guidelines (styleguide.md)
+- Mobile-first with bottom navigation; desktop has sticky top nav.
+- Use the provided typography scale, spacing, and color tokens; implement components with subtle animations and micro-interactions.
+- Primary actions: gradient primary button; secondary and ghost variants per styleguide.md.
+- Show credit estimates on buttons (e.g., “Generate (4 credits)”) and remaining balance after actions when relevant.
+- Queue and status: simple statuses (Queued, Running, Succeeded, Failed) with minimal but clear indicators.
+
+Security & privacy
+- Strip EXIF from uploads; validate file types (JPG/PNG/WebP), size ≤10MB, dims 256–2048.
+- Never trust client-sent credit balances or job costs; compute server-side.
+- Verify Stripe and Replicate webhooks using signing secrets; handle idempotency.
+
+Testing & quality
+- Add unit tests for credit estimation, reservation/finalization, and key route handlers. Prefer Vitest or Jest; keep fast.
+- Lint & type-check clean before commit. Avoid introducing new dependencies without reason.
+
+When to ask vs decide
+- If a requirement conflicts with MVP.md or styleguide.md, ask for clarification. Otherwise proceed with the simplest compliant implementation.
+
+Scaffolds & snippets
+- Next.js route handler (Node runtime):
+  ```ts
+  import { auth } from "@clerk/nextjs/server";
+  import { NextResponse } from "next/server";
+
+  export const runtime = "nodejs";
+  export async function POST(req: Request) {
+    const { userId } = auth();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    try {
+      const body = await req.json();
+      // validate input, estimate credits, reserve, create job, call Replicate
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      return NextResponse.json({ error: "Server error" }, { status: 500 });
+    }
+  }
+  ```
+
+- Credit reservation helper (concept):
+  ```ts
+  type Reservation = { reservationId: string; cost: number };
+  export async function reserveCredits(userId: string, cost: number): Promise<Reservation> { /* ... */ }
+  export async function finalizeCredits(reservationId: string): Promise<void> { /* ... */ }
+  export async function refundCredits(reservationId: string): Promise<void> { /* ... */ }
+  ```
+
+- Tailwind button variants (align with styleguide.md):
+  ```tsx
+  export function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+    const base = "w-full h-14 px-6 rounded-2xl text-white font-semibold transition-all duration-200";
+    const gradient = "bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600";
+    return <button {...props} className={[base, gradient, props.className].join(" ")} />;
+  }
+  ```
+
+Files to consult before coding
+- styleguide.md for tokens, components, animations.
+- MVP.md for API, models, credits, flows.
+- CLAUDE.md for stack overview and guardrails.
+
+Out of scope for v1 (do not add without approval)
+- Public sharing, social features, advanced moderation, A/B testing, scheduled jobs, multi-image blending, complex search.
+
+Done means
+- Code compiles, type-checks, and aligns with credits/queue rules.
+- API endpoints authenticated, validate inputs, and handle refunds on error.
+- UI follows mobile-first design, shows credit costs, and uses tokens from styleguide.md.

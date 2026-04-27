@@ -1,0 +1,245 @@
+# KlipCam Docker Compose Configuration
+# Provides complete local development environment with all dependencies
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # APPLICATION SERVICES
+  # =============================================================================
+  
+  # Main KlipCam Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://klipcam:klipcam_dev_password@postgres:5432/klipcam_dev
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_SUPABASE_URL=http://supabase:8000
+      - WEBHOOK_SECRET=dev_webhook_secret_key
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+      - supabase
+    networks:
+      - klipcam-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # =============================================================================
+  # DATABASE SERVICES
+  # =============================================================================
+  
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=klipcam_dev
+      - POSTGRES_USER=klipcam
+      - POSTGRES_PASSWORD=klipcam_dev_password
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./scripts/init-dev-db.sql:/docker-entrypoint-initdb.d/02-dev-data.sql:ro
+    networks:
+      - klipcam-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U klipcam -d klipcam_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - klipcam-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # =============================================================================
+  # SUPABASE LOCAL STACK
+  # =============================================================================
+  
+  # Supabase Studio (Local Dashboard)
+  supabase:
+    image: supabase/studio:20240101-5d8d8f6
+    ports:
+      - "3001:3000"
+    environment:
+      - SUPABASE_URL=http://kong:8000
+      - SUPABASE_REST_URL=http://localhost:8000/rest/v1/
+      - SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiJ9.ZopqoUt20nEV7_qmSdS0SzqiWr0lW4dFj1XdWUE0jgw
+      - SUPABASE_SERVICE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.M2d2z5A6-AZxBJ6-lJYZ2nHWO7YOJFvODWW8wC-Q_J8
+      - POSTGRES_PASSWORD=klipcam_dev_password
+    depends_on:
+      - postgres
+    networks:
+      - klipcam-network
+      
+  # Supabase Kong (API Gateway)
+  kong:
+    image: kong:2.8.1-alpine
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/var/lib/kong/kong.yml
+      - KONG_DNS_ORDER=LAST,A,CNAME
+      - KONG_PLUGINS=request-transformer,cors,key-auth,acl
+      - KONG_NGINX_PROXY_PROXY_BUFFER_SIZE=160k
+      - KONG_NGINX_PROXY_PROXY_BUFFERS=64 160k
+    volumes:
+      - ./config/kong.yml:/var/lib/kong/kong.yml:ro
+    networks:
+      - klipcam-network
+
+  # =============================================================================
+  # MONITORING SERVICES
+  # =============================================================================
+  
+  # Prometheus (Metrics Collection)
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - klipcam-network
+    restart: unless-stopped
+      
+  # Grafana (Metrics Dashboard)
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - klipcam-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # =============================================================================
+  # TESTING SERVICES
+  # =============================================================================
+  
+  # Test Database (for integration tests)
+  postgres-test:
+    image: postgres:15-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=klipcam_test
+      - POSTGRES_USER=klipcam_test
+      - POSTGRES_PASSWORD=klipcam_test_password
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - klipcam-network
+    profiles:
+      - testing
+    tmpfs:
+      - /var/lib/postgresql/data  # Use tmpfs for faster tests
+
+  # =============================================================================
+  # UTILITY SERVICES
+  # =============================================================================
+  
+  # Health Check Service
+  health-checker:
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile.health-checker
+    environment:
+      - TARGET_URL=http://app:3000
+      - CHECK_INTERVAL=30
+    depends_on:
+      - app
+    networks:
+      - klipcam-network
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+  # Log Aggregator (for development)
+  logs:
+    image: fluent/fluent-bit:2.0.8
+    ports:
+      - "24224:24224"
+    volumes:
+      - ./config/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./logs:/logs
+    networks:
+      - klipcam-network
+    profiles:
+      - logging
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  postgres_test_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  klipcam-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

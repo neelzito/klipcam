@@ -1,0 +1,507 @@
+# KlipCam Monitoring & Alerting Configuration
+# This file defines comprehensive monitoring rules, alert thresholds, and notification channels
+# for the KlipCam Creator AI platform.
+
+version: "1.0"
+environment: production
+
+# =============================================================================
+# NOTIFICATION CHANNELS
+# =============================================================================
+notification_channels:
+  slack_critical:
+    type: slack
+    webhook_url: "${SLACK_WEBHOOK_URL_CRITICAL}"
+    channel: "#incidents"
+    username: "KlipCam Alert Bot"
+    icon_emoji: ":rotating_light:"
+    
+  slack_warnings:
+    type: slack  
+    webhook_url: "${SLACK_WEBHOOK_URL_WARNINGS}"
+    channel: "#monitoring"
+    username: "KlipCam Monitor"
+    icon_emoji: ":warning:"
+    
+  pagerduty_critical:
+    type: pagerduty
+    integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+    severity: critical
+    
+  email_ops:
+    type: email
+    recipients:
+      - "ops@klipcam.com"
+      - "engineering@klipcam.com"
+    smtp:
+      host: "${SMTP_HOST}"
+      port: 587
+      username: "${SMTP_USERNAME}"
+      password: "${SMTP_PASSWORD}"
+
+# =============================================================================
+# BUSINESS METRICS ALERTS
+# =============================================================================
+business_alerts:
+  # User engagement monitoring
+  - name: "Daily Active Users Drop"
+    query: "SELECT COUNT(DISTINCT user_id) FROM jobs WHERE created_at >= NOW() - INTERVAL '1 day'"
+    condition: "< 50"  # Alert if DAU drops below 50
+    severity: warning
+    duration: "30m"
+    channels: ["slack_warnings"]
+    description: "Daily active users has dropped significantly"
+    runbook: "https://docs.klipcam.com/runbooks/low-engagement"
+    
+  - name: "Credit Consumption Rate Drop"
+    query: |
+      SELECT SUM(ABS(delta)) FROM credits_ledger 
+      WHERE created_at >= NOW() - INTERVAL '1 hour' 
+      AND delta < 0
+    condition: "< 100"  # Alert if hourly credit usage drops below 100
+    severity: warning
+    duration: "2h"
+    channels: ["slack_warnings"]
+    description: "Credit consumption has dropped unexpectedly"
+    
+  - name: "High Job Failure Rate"
+    query: |
+      SELECT 
+        (COUNT(CASE WHEN status = 'failed' THEN 1 END) * 100.0 / COUNT(*)) as failure_rate
+      FROM jobs 
+      WHERE created_at >= NOW() - INTERVAL '1 hour'
+    condition: "> 10"  # Alert if failure rate > 10%
+    severity: critical
+    duration: "10m"
+    channels: ["slack_critical", "pagerduty_critical"]
+    description: "Job failure rate is critically high"
+    runbook: "https://docs.klipcam.com/runbooks/high-failure-rate"
+    
+  - name: "Revenue Impact - No Successful Payments"
+    query: |
+      SELECT COUNT(*) FROM subscriptions 
+      WHERE updated_at >= NOW() - INTERVAL '2 hours' 
+      AND status = 'active'
+    condition: "= 0"  # Alert if no successful payments in 2 hours
+    severity: critical
+    duration: "1h"
+    channels: ["slack_critical", "pagerduty_critical", "email_ops"]
+    description: "No successful payments processed - potential revenue impact"
+    
+  - name: "Trial to Paid Conversion Drop"
+    query: |
+      SELECT 
+        (COUNT(CASE WHEN plan = 'pro' THEN 1 END) * 100.0 / COUNT(*)) as conversion_rate
+      FROM users 
+      WHERE created_at >= NOW() - INTERVAL '1 day'
+      AND created_at >= NOW() - INTERVAL '2 days'
+    condition: "< 5"  # Alert if conversion rate drops below 5%
+    severity: warning
+    duration: "1d"
+    channels: ["slack_warnings"]
+    description: "Trial to paid conversion rate is below normal"
+
+# =============================================================================
+# TECHNICAL METRICS ALERTS  
+# =============================================================================
+technical_alerts:
+  # API Performance
+  - name: "High API Response Time"
+    metric: "http_request_duration_p95"
+    condition: "> 3000"  # 3 seconds
+    severity: warning
+    duration: "10m"
+    channels: ["slack_warnings"]
+    description: "API response time (P95) is above 3 seconds"
+    labels:
+      endpoint: "/api/*"
+      
+  - name: "Critical API Response Time"
+    metric: "http_request_duration_p99"
+    condition: "> 10000"  # 10 seconds
+    severity: critical
+    duration: "5m"
+    channels: ["slack_critical", "pagerduty_critical"]
+    description: "API response time (P99) is critically high"
+    
+  # Error Rate Monitoring
+  - name: "High Error Rate"
+    metric: "http_requests_error_rate"
+    condition: "> 0.05"  # 5%
+    severity: critical
+    duration: "5m"
+    channels: ["slack_critical", "pagerduty_critical"]
+    description: "HTTP error rate is above 5%"
+    runbook: "https://docs.klipcam.com/runbooks/high-error-rate"
+    
+  - name: "Credit System Errors"
+    metric: "credit_operation_errors"
+    condition: "> 10"  # 10 errors per hour
+    severity: critical
+    duration: "1h"
+    channels: ["slack_critical", "pagerduty_critical"]
+    description: "Credit system experiencing errors - potential billing impact"
+    
+  # Database Performance
+  - name: "Database Connection Pool Exhaustion"
+    query: |
+      SELECT count(*) FROM pg_stat_activity 
+      WHERE state = 'active'
+    condition: "> 80"  # Alert if 80+ active connections
+    severity: warning
+    duration: "5m"
+    channels: ["slack_warnings"]
+    description: "Database connection pool usage is high"
+    
+  - name: "Database Query Performance"
+    query: |
+      SELECT max(total_time/calls) as max_avg_time 
+      FROM pg_stat_statements 
+      WHERE calls > 10
+    condition: "> 1000"  # Alert if any query averages > 1 second
+    severity: warning
+    duration: "15m"
+    channels: ["slack_warnings"]
+    description: "Database queries are performing poorly"
+    
+  - name: "Database Lock Waits"
+    query: "SELECT count(*) FROM pg_stat_activity WHERE wait_event_type = 'Lock'"
+    condition: "> 5"  # Alert if 5+ queries waiting on locks
+    severity: warning
+    duration: "10m"
+    channels: ["slack_warnings"]
+    description: "Database experiencing lock contention"
+    
+  # Queue and Job Processing
+  - name: "Job Queue Backlog"
+    query: "SELECT COUNT(*) FROM jobs WHERE status = 'queued'"
+    condition: "> 50"  # Alert if 50+ jobs queued
+    severity: warning
+    duration: "15m"
+    channels: ["slack_warnings"]
+    description: "Job queue has significant backlog"
+    
+  - name: "Stuck Jobs"
+    query: |
+      SELECT COUNT(*) FROM jobs 
+      WHERE status = 'running' 
+      AND created_at < NOW() - INTERVAL '1 hour'
+    condition: "> 0"  # Alert if any jobs stuck for > 1 hour
+    severity: critical
+    duration: "30m"
+    channels: ["slack_critical"]
+    description: "Jobs appear to be stuck in running state"
+    runbook: "https://docs.klipcam.com/runbooks/stuck-jobs"
+
+# =============================================================================
+# INFRASTRUCTURE ALERTS
+# =============================================================================
+infrastructure_alerts:
+  # Storage and Disk Usage
+  - name: "Storage Usage High"
+    query: |
+      SELECT 
+        pg_size_pretty(pg_database_size(current_database())) as db_size,
+        pg_database_size(current_database()) as db_size_bytes
+    condition: "db_size_bytes > 8589934592"  # 8GB
+    severity: warning
+    duration: "1h"
+    channels: ["slack_warnings"]
+    description: "Database size is approaching limits"
+    
+  - name: "Asset Storage Growth"
+    metric: "supabase_storage_usage_bytes"
+    condition: "> 85899345920"  # 80GB (out of 100GB limit)
+    severity: warning
+    duration: "1h"
+    channels: ["slack_warnings"]
+    description: "Asset storage usage is approaching limit"
+    
+  # Memory and Resource Usage
+  - name: "High Memory Usage"
+    metric: "vercel_function_memory_usage"
+    condition: "> 0.8"  # 80% of allocated memory
+    severity: warning
+    duration: "10m"
+    channels: ["slack_warnings"]
+    description: "Vercel function memory usage is high"
+    
+  # External Service Dependencies
+  - name: "Replicate API Errors"
+    metric: "replicate_api_error_rate"
+    condition: "> 0.1"  # 10% error rate
+    severity: critical
+    duration: "5m"
+    channels: ["slack_critical"]
+    description: "High error rate from Replicate API"
+    
+  - name: "Stripe Webhook Failures"
+    query: |
+      SELECT COUNT(*) FROM webhook_events 
+      WHERE service = 'stripe' 
+      AND status = 'failed' 
+      AND created_at >= NOW() - INTERVAL '1 hour'
+    condition: "> 5"  # More than 5 failed webhooks per hour
+    severity: critical
+    duration: "30m"
+    channels: ["slack_critical", "pagerduty_critical"]
+    description: "Stripe webhooks are failing - potential billing issues"
+    
+  - name: "Supabase Service Degradation"
+    metric: "supabase_api_response_time"
+    condition: "> 2000"  # 2 seconds
+    severity: warning
+    duration: "10m"
+    channels: ["slack_warnings"]
+    description: "Supabase API response time is degraded"
+
+# =============================================================================
+# SECURITY ALERTS
+# =============================================================================
+security_alerts:
+  - name: "Unusual Authentication Patterns"
+    query: |
+      SELECT COUNT(*) FROM auth_events 
+      WHERE event_type = 'failed_login' 
+      AND created_at >= NOW() - INTERVAL '10 minutes'
+    condition: "> 50"  # 50+ failed logins in 10 minutes
+    severity: warning
+    duration: "5m"
+    channels: ["slack_warnings"]
+    description: "High number of failed authentication attempts"
+    
+  - name: "Rate Limiting Triggered"
+    metric: "rate_limit_violations"
+    condition: "> 100"  # 100+ rate limit hits per hour
+    severity: warning
+    duration: "1h"
+    channels: ["slack_warnings"]
+    description: "High number of rate limiting violations"
+    
+  - name: "Suspicious Credit Usage"
+    query: |
+      SELECT user_id, SUM(ABS(delta)) as credit_usage
+      FROM credits_ledger 
+      WHERE created_at >= NOW() - INTERVAL '1 hour'
+      AND delta < 0
+      GROUP BY user_id
+      HAVING SUM(ABS(delta)) > 1000
+    condition: "COUNT(*) > 0"  # Any user using > 1000 credits/hour
+    severity: warning
+    duration: "30m"
+    channels: ["slack_warnings"]
+    description: "Unusually high credit consumption detected"
+
+# =============================================================================
+# SYNTHETIC MONITORING
+# =============================================================================
+synthetic_checks:
+  - name: "Homepage Load Time"
+    url: "https://klipcam.com"
+    method: "GET"
+    timeout: 10000
+    interval: "5m"
+    expected_status: 200
+    max_response_time: 3000
+    locations: ["us-east-1", "us-west-2", "eu-west-1"]
+    alerts:
+      - condition: "response_time > 5000"
+        severity: warning
+        channels: ["slack_warnings"]
+      - condition: "status_code != 200"
+        severity: critical  
+        channels: ["slack_critical", "pagerduty_critical"]
+        
+  - name: "Health Check Endpoint"
+    url: "https://klipcam.com/api/health"
+    method: "GET"
+    timeout: 10000
+    interval: "1m"
+    expected_status: 200
+    max_response_time: 2000
+    alerts:
+      - condition: "status_code != 200"
+        severity: critical
+        channels: ["slack_critical", "pagerduty_critical"]
+      - condition: "response_time > 5000"
+        severity: warning
+        channels: ["slack_warnings"]
+        
+  - name: "User Authentication Flow"
+    type: "multi_step"
+    interval: "10m"
+    steps:
+      - url: "https://klipcam.com/sign-in"
+        method: "GET"
+        expected_status: 200
+      - url: "https://klipcam.com/api/auth/check"
+        method: "GET"
+        expected_status: [200, 401]  # Both are valid
+    alerts:
+      - condition: "any_step_fails"
+        severity: critical
+        channels: ["slack_critical"]
+        
+  - name: "Job Creation Flow"
+    type: "authenticated"
+    interval: "15m"
+    auth_token: "${MONITORING_USER_TOKEN}"
+    steps:
+      - url: "https://klipcam.com/api/jobs"
+        method: "POST"
+        body: |
+          {
+            "type": "image",
+            "subtype": "t2i", 
+            "params": {
+              "prompt": "monitoring test",
+              "width": 512,
+              "height": 512
+            }
+          }
+        expected_status: [202, 402]  # 202 = success, 402 = insufficient credits
+    alerts:
+      - condition: "status_code not in [202, 402]"
+        severity: critical
+        channels: ["slack_critical"]
+
+# =============================================================================
+# ESCALATION POLICIES
+# =============================================================================
+escalation_policies:
+  critical_incidents:
+    - level: 1
+      delay: "0m"
+      channels: ["slack_critical"]
+      
+    - level: 2  
+      delay: "15m"
+      channels: ["pagerduty_critical"]
+      
+    - level: 3
+      delay: "30m"
+      channels: ["email_ops"]
+      
+    - level: 4
+      delay: "60m"
+      channels: ["email_ops"]
+      contacts: ["cto@klipcam.com"]
+      
+  warning_incidents:
+    - level: 1
+      delay: "0m"
+      channels: ["slack_warnings"]
+      
+    - level: 2
+      delay: "2h"
+      channels: ["email_ops"]
+      condition: "not_resolved"
+
+# =============================================================================
+# MAINTENANCE WINDOWS
+# =============================================================================
+maintenance_windows:
+  weekly_maintenance:
+    schedule: "0 2 * * 1"  # Mondays at 2 AM UTC
+    duration: "2h"
+    suppress_alerts:
+      - "Database Connection Pool Exhaustion"
+      - "High API Response Time"
+      
+  deployment_window:
+    # Dynamic maintenance window during deployments
+    trigger: "deployment_start"
+    duration: "30m"
+    suppress_alerts:
+      - "High Error Rate"
+      - "High API Response Time"
+
+# =============================================================================
+# DASHBOARD CONFIGURATIONS
+# =============================================================================
+dashboards:
+  system_overview:
+    refresh: "30s"
+    panels:
+      - title: "System Health"
+        type: "stat"
+        queries:
+          - "SELECT status FROM system_health LIMIT 1"
+      - title: "Active Users (24h)"
+        type: "stat"
+        queries:
+          - "SELECT COUNT(DISTINCT user_id) FROM jobs WHERE created_at >= NOW() - INTERVAL '1 day'"
+      - title: "API Response Time"
+        type: "graph"
+        queries:
+          - "SELECT avg(response_time) FROM api_metrics GROUP BY time(5m)"
+      - title: "Job Success Rate"
+        type: "stat"
+        queries:
+          - "SELECT (COUNT(CASE WHEN status = 'completed' THEN 1 END) * 100.0 / COUNT(*)) FROM jobs WHERE created_at >= NOW() - INTERVAL '1 hour'"
+          
+  business_metrics:
+    refresh: "5m"
+    panels:
+      - title: "Revenue (24h)"
+        type: "stat"
+        queries:
+          - "SELECT SUM(amount/100.0) FROM payments WHERE created_at >= NOW() - INTERVAL '1 day'"
+      - title: "New Users"
+        type: "graph"
+        queries:
+          - "SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '7 days' GROUP BY DATE(created_at)"
+      - title: "Credit Usage"
+        type: "graph"
+        queries:
+          - "SELECT SUM(ABS(delta)) FROM credits_ledger WHERE delta < 0 GROUP BY time(1h)"
+
+# =============================================================================
+# LOG ANALYSIS RULES
+# =============================================================================
+log_analysis:
+  error_patterns:
+    - pattern: "ERROR.*database.*connection"
+      severity: critical
+      alert: "Database connection errors detected"
+      channels: ["slack_critical"]
+      
+    - pattern: "ERROR.*replicate.*timeout"
+      severity: warning
+      alert: "Replicate API timeouts detected"
+      channels: ["slack_warnings"]
+      
+    - pattern: "ERROR.*stripe.*webhook"
+      severity: critical
+      alert: "Stripe webhook processing errors"
+      channels: ["slack_critical", "pagerduty_critical"]
+      
+  performance_patterns:
+    - pattern: "SLOW_QUERY.*([0-9]+)ms"
+      condition: "capture_group_1 > 5000"
+      severity: warning
+      alert: "Slow database queries detected"
+      channels: ["slack_warnings"]
+
+# =============================================================================
+# AUTOMATED REMEDIATION
+# =============================================================================
+automated_actions:
+  - trigger: "Job Queue Backlog"
+    action: "scale_up"
+    parameters:
+      resource: "vercel_functions"
+      scale_factor: 1.5
+      max_instances: 10
+      
+  - trigger: "Database Connection Pool Exhaustion"
+    action: "restart_connections"
+    parameters:
+      service: "connection_pool"
+      grace_period: "30s"
+      
+  - trigger: "High Memory Usage"
+    action: "cleanup_cache"
+    parameters:
+      cache_type: "redis"
+      cleanup_percentage: 20

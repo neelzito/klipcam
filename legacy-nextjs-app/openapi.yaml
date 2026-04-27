@@ -1,0 +1,1389 @@
+openapi: 3.0.3
+info:
+  title: KlipCam API
+  description: API for KlipCam, a Creator AI platform.
+  version: 1.0.0
+servers:
+  - url: /api
+security:
+  - ClerkAuth: []
+paths:
+  /jobs:
+    post:
+      summary: Create a new generation job
+      description: Creates a new image or video generation job after validating user credits.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [image, video]
+                subtype:
+                  type: string
+                  enum: [t2i, i2i, t2v, i2v, spider, lora_train, lora_t2i, lora_i2i]
+                params:
+                  type: object
+                  description: Model-specific parameters.
+                  properties:
+                    prompt:
+                      type: string
+                    negative_prompt:
+                      type: string
+                    width:
+                      type: integer
+                    height:
+                      type: integer
+                    steps:
+                      type: integer
+                    guidance:
+                      type: number
+                    seed:
+                      type: integer
+                    reference_image_url:
+                      type: string
+                      format: uri
+                    model_tier:
+                      type: string
+                      enum: [base, premium]
+                    aspect:
+                      type: string
+                      enum: ["9:16", "1:1", "portrait"]
+                    duration:
+                      type: integer
+                      default: 3
+                    lora_model_id:
+                      type: string
+                      format: uuid
+                      description: LoRA model ID for enhanced generation
+                    lora_trigger_word:
+                      type: string
+                      description: Trigger word for LoRA model activation
+              required:
+                - type
+                - subtype
+                - params
+      responses:
+        '202':
+          description: Job accepted and queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          description: Bad request (e.g., invalid parameters).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '402':
+          description: Insufficient credits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Get user's job history
+      description: Returns a paginated list of the user's generation jobs.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [queued, running, succeeded, failed]
+          description: Filter jobs by status
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [image, video]
+          description: Filter jobs by type
+      responses:
+        '200':
+          description: A paginated list of jobs.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /assets:
+    get:
+      summary: Get user's asset library
+      description: Returns a paginated list of the user's generated assets.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [image, video]
+        - name: favorites_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: A paginated list of assets.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Asset'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /assets/{id}/upscale:
+    post:
+      summary: Upscale an image
+      description: Creates a job to upscale a previously generated image.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target:
+                  type: string
+                  enum: [square, portrait, vertical]
+              required:
+                - target
+      responses:
+        '202':
+          description: Upscale job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '402':
+          description: Insufficient credits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Asset not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /favorites:
+    post:
+      summary: Favorite or unfavorite an asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                asset_id:
+                  type: string
+                  format: uuid
+                is_favorite:
+                  type: boolean
+              required:
+                - asset_id
+                - is_favorite
+      responses:
+        '200':
+          description: Favorite status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Favorite'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Asset not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /replicate/webhook:
+    post:
+      summary: Replicate webhook
+      description: Handles completion callbacks from the Replicate API. This endpoint is not called by the frontend client.
+      requestBody:
+        description: Replicate prediction object.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook received and processed.
+        '400':
+          description: Bad request or invalid signature.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /stripe/webhook:
+    post:
+      summary: Stripe webhook
+      description: Handles subscription and payment events from Stripe. This endpoint is not called by the frontend client.
+      requestBody:
+        description: Stripe event object.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook received and processed.
+        '400':
+          description: Bad request or invalid signature.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user/profile:
+    get:
+      summary: Get current user profile
+      description: Returns the current user's profile including credit balance and subscription status.
+      responses:
+        '200':
+          description: User profile data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user/credits:
+    get:
+      summary: Get user's credit balance and history
+      description: Returns the user's current credit balance and recent credit transactions.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Credit balance and transaction history.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: integer
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CreditLedger'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /presets:
+    get:
+      summary: Get available presets
+      description: Returns available style presets for image generation.
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [image, video]
+          description: Filter presets by type
+        - name: tier
+          in: query
+          schema:
+            type: string
+            enum: [base, premium]
+          description: Filter presets by model tier
+      responses:
+        '200':
+          description: List of available presets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image_presets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Preset'
+                  video_presets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Preset'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns system health status for monitoring.
+      security: []  # No authentication required
+      responses:
+        '200':
+          description: System is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  database:
+                    type: string
+                    enum: [connected, disconnected]
+                  replicate:
+                    type: string
+                    enum: [reachable, unreachable]
+        '503':
+          description: System is unhealthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "unhealthy"
+                  errors:
+                    type: array
+                    items:
+                      type: string
+
+  /pricing:
+    get:
+      summary: Get current pricing information
+      description: Returns credit costs for different operations and subscription pricing.
+      responses:
+        '200':
+          description: Current pricing structure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pricing'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /subscription:
+    get:
+      summary: Get current subscription
+      description: Returns the user's current subscription status.
+      responses:
+        '200':
+          description: Current subscription data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No active subscription.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create or manage subscription
+      description: Creates a new subscription or manages existing subscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [create, cancel, reactivate]
+                price_id:
+                  type: string
+                  description: Stripe price ID for subscription creation
+              required:
+                - action
+      responses:
+        '200':
+          description: Subscription action successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkout_url:
+                    type: string
+                    format: uri
+                    description: Stripe checkout URL for new subscriptions
+                  subscription:
+                    $ref: '#/components/schemas/Subscription'
+        '400':
+          description: Invalid action or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /assets/{id}/download:
+    get:
+      summary: Get asset download URL
+      description: Returns a signed URL for downloading a specific asset.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Download URL returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Asset not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /jobs/{id}:
+    get:
+      summary: Get specific job details
+      description: Returns detailed information about a specific job.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lora-models:
+    get:
+      summary: Get user's LoRA models
+      description: Returns a paginated list of the user's LoRA models.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [training, ready, failed, archived]
+        - name: include_public
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Include publicly available LoRA models
+      responses:
+        '200':
+          description: A paginated list of LoRA models.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/LoRAModel'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a new LoRA model
+      description: Creates a new LoRA model training job from uploaded images.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                  description: Display name for the LoRA model
+                description:
+                  type: string
+                  maxLength: 500
+                  description: Optional description
+                trigger_word:
+                  type: string
+                  maxLength: 50
+                  description: Word to trigger the LoRA effect
+                is_public:
+                  type: boolean
+                  default: false
+                  description: Make model publicly available
+                training_images:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        format: uri
+                      order:
+                        type: integer
+                        minimum: 1
+                        maximum: 10
+                  minItems: 5
+                  maxItems: 10
+                  description: Training images (5-10 required)
+              required:
+                - name
+                - trigger_word
+                - training_images
+      responses:
+        '202':
+          description: LoRA training job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoRAModel'
+        '400':
+          description: Invalid training data or insufficient images.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '402':
+          description: Insufficient credits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User already has an active training job.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lora-models/{id}:
+    get:
+      summary: Get specific LoRA model details
+      description: Returns detailed information about a specific LoRA model.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: LoRA model details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoRAModel'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: LoRA model not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Update LoRA model
+      description: Updates a LoRA model's metadata or status.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                description:
+                  type: string
+                  maxLength: 500
+                is_public:
+                  type: boolean
+                status:
+                  type: string
+                  enum: [archived]
+                  description: Only archived status can be set by user
+      responses:
+        '200':
+          description: LoRA model updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoRAModel'
+        '400':
+          description: Invalid update parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: LoRA model not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete LoRA model
+      description: Permanently deletes a LoRA model and its training data.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: LoRA model deleted successfully.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: LoRA model not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Cannot delete model that is currently training.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lora-models/{id}/training-images:
+    get:
+      summary: Get LoRA model training images
+      description: Returns the training images used for a LoRA model.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Training images list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoRATrainingImage'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: LoRA model not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [image, video]
+        subtype:
+          type: string
+          enum: [t2i, i2i, t2v, i2v, spider, upscale, lora_train, lora_t2i, lora_i2i]
+        model:
+          type: string
+          description: The Replicate model used for generation
+        params:
+          type: object
+          description: Generation parameters used for the job
+        status:
+          type: string
+          enum: [queued, running, succeeded, failed]
+        cost_credits:
+          type: integer
+          minimum: 1
+          description: Credits charged for this job
+        replicate_prediction_id:
+          type: string
+          nullable: true
+          description: Replicate prediction ID for tracking
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true
+          description: Error message if job failed
+      required:
+        - id
+        - user_id
+        - type
+        - subtype
+        - status
+        - cost_credits
+        - created_at
+
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        job_id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [image, video]
+        path:
+          type: string
+          description: Path in Supabase Storage
+        url:
+          type: string
+          format: uri
+          description: Signed URL for accessing the asset
+        width:
+          type: integer
+          minimum: 1
+          description: Asset width in pixels
+        height:
+          type: integer
+          minimum: 1
+          description: Asset height in pixels
+        size_bytes:
+          type: integer
+          minimum: 0
+          description: File size in bytes
+        is_low_res:
+          type: boolean
+          description: Whether this is a low-resolution version
+        is_watermarked:
+          type: boolean
+          description: Whether this asset has a watermark (trial users)
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - job_id
+        - kind
+        - path
+        - url
+        - size_bytes
+        - is_low_res
+        - is_watermarked
+        - created_at
+
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        asset_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - asset_id
+        - created_at
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        clerk_id:
+          type: string
+          description: Unique identifier from Clerk authentication
+        email:
+          type: string
+          format: email
+        plan:
+          type: string
+          enum: [free, paid]
+          description: Current subscription plan
+        credit_balance:
+          type: integer
+          minimum: 0
+          description: Current available credits
+        trial_ends_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Trial expiration date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - clerk_id
+        - email
+        - plan
+        - credit_balance
+        - created_at
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        stripe_customer_id:
+          type: string
+          description: Stripe customer ID
+        stripe_subscription_id:
+          type: string
+          description: Stripe subscription ID
+        status:
+          type: string
+          enum: [active, canceled, incomplete, past_due, unpaid]
+        current_period_start:
+          type: string
+          format: date-time
+        current_period_end:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - stripe_customer_id
+        - stripe_subscription_id
+        - status
+        - current_period_start
+        - current_period_end
+        - created_at
+
+    CreditLedger:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        delta:
+          type: integer
+          description: Credit change (positive for grants, negative for charges)
+        reason:
+          type: string
+          enum: [trial_seed, subscription_grant, job_charge, job_refund, manual_adjust]
+        job_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Associated job ID if applicable
+        metadata:
+          type: object
+          description: Additional context for the transaction
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - delta
+        - reason
+        - created_at
+
+    Preset:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique preset identifier
+        name:
+          type: string
+          description: Display name of the preset
+        description:
+          type: string
+          description: Description of the preset style
+        thumbnail_url:
+          type: string
+          format: uri
+          description: URL to preset preview image
+        model_tier:
+          type: string
+          enum: [base, premium]
+          description: Required model tier for this preset
+        cost_credits:
+          type: integer
+          description: Credit cost for using this preset
+        params:
+          type: object
+          description: Default parameters for this preset
+          properties:
+            prompt:
+              type: string
+            negative_prompt:
+              type: string
+            guidance:
+              type: number
+            steps:
+              type: integer
+      required:
+        - id
+        - name
+        - model_tier
+        - cost_credits
+
+    Pricing:
+      type: object
+      properties:
+        credits:
+          type: object
+          properties:
+            base_image:
+              type: integer
+              description: Credits for base quality image generation
+              example: 1
+            premium_image:
+              type: integer
+              description: Credits for premium quality image generation
+              example: 4
+            image_upscale:
+              type: integer
+              description: Credits for image upscaling
+              example: 4
+            base_video:
+              type: integer
+              description: Credits for base quality video generation
+              example: 18
+            spider_effect:
+              type: integer
+              description: Credits for spider crawling effect
+              example: 25
+            lora_training:
+              type: integer
+              description: Credits for LoRA model training
+              example: 150
+            lora_generation_multiplier:
+              type: number
+              description: Multiplier for LoRA-enhanced generation
+              example: 2.0
+          required:
+            - base_image
+            - premium_image
+            - image_upscale
+            - base_video
+            - spider_effect
+            - lora_training
+            - lora_generation_multiplier
+        subscription:
+          type: object
+          properties:
+            monthly_price_usd:
+              type: number
+              description: Monthly subscription price in USD
+              example: 9.00
+            credits_per_month:
+              type: integer
+              description: Credits included per month
+              example: 900
+            trial_credits:
+              type: integer
+              description: Credits given for trial
+              example: 10
+          required:
+            - monthly_price_usd
+            - credits_per_month
+            - trial_credits
+      required:
+        - credits
+        - subscription
+
+    LoRAModel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Display name for the LoRA model
+        description:
+          type: string
+          nullable: true
+          description: Optional description
+        trigger_word:
+          type: string
+          description: Word to trigger the LoRA effect
+        status:
+          type: string
+          enum: [training, ready, failed, archived]
+          description: Current model status
+        replicate_model_id:
+          type: string
+          nullable: true
+          description: Replicate model ID once training completes
+        training_cost_credits:
+          type: integer
+          description: Credits charged for training
+        training_images_count:
+          type: integer
+          description: Number of training images used
+        is_public:
+          type: boolean
+          description: Whether model is publicly available
+        usage_count:
+          type: integer
+          description: Number of times model has been used
+        total_generation_cost:
+          type: integer
+          description: Total credits spent on generations with this model
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When training completed
+        error_message:
+          type: string
+          nullable: true
+          description: Error message if training failed
+      required:
+        - id
+        - user_id
+        - name
+        - trigger_word
+        - status
+        - training_cost_credits
+        - training_images_count
+        - is_public
+        - usage_count
+        - total_generation_cost
+        - created_at
+
+    LoRATrainingImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        lora_model_id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+          description: Signed URL for the training image
+        order:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Order in the training sequence
+        face_confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+          description: Face detection confidence score
+        is_valid:
+          type: boolean
+          description: Whether image passes validation
+        validation_error:
+          type: string
+          nullable: true
+          description: Validation error message if any
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - lora_model_id
+        - url
+        - order
+        - is_valid
+        - created_at
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type or code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error context
+      required:
+        - error
+        - message
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Array of items
+        pagination:
+          type: object
+          properties:
+            total:
+              type: integer
+              description: Total number of items
+            limit:
+              type: integer
+              description: Items per page
+            offset:
+              type: integer
+              description: Current offset
+            has_more:
+              type: boolean
+              description: Whether there are more items
+          required:
+            - total
+            - limit
+            - offset
+            - has_more
+      required:
+        - data
+        - pagination
+
+  securitySchemes:
+    ClerkAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk JWT token. Include in Authorization header as "Bearer <token>"

@@ -1,0 +1,363 @@
+# KlipCam .gitignore
+# Comprehensive exclusion list for Next.js, Node.js, and KlipCam specific files
+
+# =============================================================================
+# DEPENDENCIES
+# =============================================================================
+node_modules/
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.yarn/install-state.gz
+
+# =============================================================================
+# NEXT.JS BUILD OUTPUT
+# =============================================================================
+.next/
+.next/**
+out/
+build/
+dist/
+
+# =============================================================================
+# ENVIRONMENT VARIABLES & SECRETS
+# =============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+.env.production
+
+# API Keys and Secrets (extra protection)
+**/secrets/
+**/*.key
+**/*.pem
+**/*.p12
+**/*.crt
+**/*.csr
+
+# =============================================================================
+# VERCEL DEPLOYMENT
+# =============================================================================
+.vercel
+.vercel/**
+
+# =============================================================================
+# DEVELOPMENT & TESTING
+# =============================================================================
+# Local development
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store*
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+test-results/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# =============================================================================
+# LOGGING & MONITORING
+# =============================================================================
+logs/
+*.log
+log/
+*.log.*
+
+# Error logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =============================================================================
+# DATABASE & STORAGE
+# =============================================================================
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+database.db*
+
+# Database dumps
+*.sql.gz
+*.sql.bz2
+backups/
+database-backups/
+
+# Upload directories
+uploads/
+user-uploads/
+generated/
+assets/
+storage/
+
+# =============================================================================
+# AI MODEL FILES
+# =============================================================================
+# LoRA models and training data
+models/
+lora-models/
+training-data/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.pkl
+
+# Large assets
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.flac
+
+# =============================================================================
+# DOCKER & CONTAINERIZATION
+# =============================================================================
+# Docker volumes
+docker-compose.override.yml
+.dockerignore
+
+# =============================================================================
+# DEPLOYMENT & CI/CD
+# =============================================================================
+# GitHub Actions secrets
+.github/secrets/
+
+# Terraform state files (if using)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes secrets
+k8s/secrets/
+*.yaml.enc
+
+# =============================================================================
+# MONITORING & ANALYTICS
+# =============================================================================
+# Monitoring data
+monitoring-data/
+metrics/
+alerts/
+grafana-data/
+prometheus-data/
+
+# Performance profiling
+*.prof
+*.cpuprofile
+*.heapprofile
+
+# =============================================================================
+# CACHE & TEMPORARY FILES
+# =============================================================================
+# Various caches
+.cache/
+.parcel-cache/
+.next/cache/
+.eslintcache
+.turbo/
+
+# Service worker cache
+workbox-*.js
+sw.js
+
+# =============================================================================
+# PLATFORM SPECIFIC
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# EDITOR SPECIFIC
+# =============================================================================
+# VSCode
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+.history/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# KLIPCAM SPECIFIC
+# =============================================================================
+# User generated content (development)
+user-content/
+generated-assets/
+trial-assets/
+
+# Local configuration overrides
+config.local.json
+settings.local.json
+
+# Webhook test files
+webhook-tests/
+*.webhook
+
+# Local scripts (if containing secrets)
+scripts/local/
+scripts/private/
+
+# Development utilities
+dev-utils/
+test-data/
+
+# Local SSL certificates for development
+*.local.crt
+*.local.key
+localhost.pem
+localhost-key.pem
+
+# =============================================================================
+# PACKAGE MANAGERS
+# =============================================================================
+# NPM
+.npm/
+.npmrc
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.yarnrc.yml
+
+# PNPM
+.pnpm-debug.log*
+.pnpm/
+
+# =============================================================================
+# RUNTIME & PROCESS FILES
+# =============================================================================
+pids/
+*.pid
+*.seed
+*.pid.lock
+lib-cov/
+
+# =============================================================================
+# SYSTEM & BACKUP FILES
+# =============================================================================
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# System files
+.sys
+.tmp
+.temp
+
+# =============================================================================
+# ADDITIONAL SECURITY EXCLUSIONS
+# =============================================================================
+# Certificate files
+*.p7b
+*.p7r
+*.spc
+*.pfx
+
+# Private keys
+private.key
+*.private
+*.secret
+
+# Configuration with secrets
+config.production.json
+secrets.json
+credentials.json
+
+# =============================================================================
+# DOCUMENTATION (if auto-generated)
+# =============================================================================
+# Only ignore auto-generated docs
+docs/auto/
+documentation/generated/
+
+# Keep manually written documentation
+!docs/
+!*.md
+!README.md

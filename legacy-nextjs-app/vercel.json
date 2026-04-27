@@ -1,0 +1,64 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/*/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/replicate/webhook/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/stripe/webhook/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-expired-assets",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/process-pending-jobs", 
+      "schedule": "0 3 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/app",
+      "destination": "/dashboard",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    }
+  ]
+}

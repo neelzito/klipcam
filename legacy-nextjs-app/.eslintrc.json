@@ -1,0 +1,12 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "@next/next/no-img-element": "off",
+    "prefer-const": "warn",
+    "no-var": "error",
+    "react/no-unescaped-entities": "warn",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
+
+
