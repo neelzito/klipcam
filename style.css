@@ -649,6 +649,7 @@ footer {
     background: var(--card-bg);
     border: 1px solid var(--border);
     aspect-ratio: 1;
+    cursor: pointer;
 }
 
 .gallery-item img {
@@ -660,6 +661,43 @@ footer {
 
 .gallery-item:hover img {
     transform: scale(1.1);
+}
+
+/* --- Lightbox --- */
+.modal.lightbox {
+    z-index: 1100;
+}
+
+.lightbox-content {
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    max-width: 1200px;
+    height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-img-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.lightbox-content img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -3rem;
+    right: 0;
+    font-size: 3.5rem;
+    color: white;
 }
 
 @media (max-width: 768px) {

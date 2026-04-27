@@ -216,6 +216,15 @@
         </div>
     </div>
 
+    <!-- ─── LIGHTBOX MODAL (Full Screen Image) ───────────────── -->
+    <div id="lightbox-modal" class="modal lightbox">
+        <div class="modal-overlay" onclick="closeLightbox()"></div>
+        <div class="lightbox-content">
+            <button class="close-btn lightbox-close" onclick="closeLightbox()">&times;</button>
+            <img id="lightbox-img" src="" alt="Full size preview">
+        </div>
+    </div>
+
     <!-- ─── MID-PAGE CTA ──────────────────────────────────── -->
     <section class="mid-cta" aria-label="Download call to action">
         <div class="container" style="text-align:center;">
@@ -407,6 +416,8 @@
         };
 
         const modal = document.getElementById('gallery-modal');
+        const lightbox = document.getElementById('lightbox-modal');
+        const lightboxImg = document.getElementById('lightbox-img');
         const galleryGrid = document.getElementById('gallery-grid');
         const galleryTitle = document.getElementById('gallery-title');
 
@@ -428,26 +439,48 @@
                 imgContainer.className = 'gallery-item';
                 
                 const img = document.createElement('img');
-                img.src = `samples/${packId}/${imgName}`;
+                const imgSrc = `samples/${packId}/${imgName}`;
+                img.src = imgSrc;
                 img.alt = `${title} sample image`;
                 img.loading = 'lazy';
+                
+                // Add Lightbox trigger
+                imgContainer.onclick = () => openLightbox(imgSrc);
                 
                 imgContainer.appendChild(img);
                 galleryGrid.appendChild(imgContainer);
             });
 
             modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scroll
+            document.body.style.overflow = 'hidden';
         }
 
         function closeGallery() {
             modal.classList.remove('active');
-            document.body.style.overflow = '';
+            if (!lightbox.classList.contains('active')) {
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightbox.classList.add('active');
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            // If gallery is still open, keep overflow hidden
+            if (!modal.classList.contains('active')) {
+                document.body.style.overflow = '';
+            }
         }
 
         // Close on ESC
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeGallery();
+            if (e.key === 'Escape') {
+                if (lightbox.classList.contains('active')) closeLightbox();
+                else if (modal.classList.contains('active')) closeGallery();
+            }
         });
     </script>
 
