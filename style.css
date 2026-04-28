@@ -121,7 +121,8 @@ nav {
     height: 100vh;
     min-height: 700px;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
+    padding-bottom: 10vh;
     overflow: hidden;
 }
 
